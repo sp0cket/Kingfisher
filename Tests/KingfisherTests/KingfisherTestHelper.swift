@@ -196,6 +196,22 @@ extension Image {
     }
 }
 
+#if os(iOS) || os(tvOS)
+import UIKit
+extension Image {
+    static func from(color: Color, size: CGSize) -> Image {
+        let rect = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+        UIGraphicsBeginImageContext(rect.size)
+        let context = UIGraphicsGetCurrentContext()
+        context!.setFillColor(color.cgColor)
+        context!.fill(rect)
+        let img = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return img!
+    }
+}
+#endif
+
 extension Data {
     init(fileName: String) {
         let comp = fileName.components(separatedBy: ".")
@@ -213,4 +229,21 @@ extension Data {
 
 extension Bundle {
     static let test: Bundle = Bundle(for: ImageExtensionTests.self)
+}
+
+// Make tests happier with old Result type
+extension Result {
+    var value: Success? {
+        switch self {
+        case .success(let success): return success
+        case .failure: return nil
+        }
+    }
+
+    var error: Failure? {
+        switch self {
+        case .success: return nil
+        case .failure(let failure): return failure
+        }
+    }
 }

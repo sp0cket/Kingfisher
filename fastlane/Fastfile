@@ -6,6 +6,10 @@ default_platform :ios
 platform :ios do
   desc "Runs all the tests"
   lane :tests do
+    test(scheme: "Kingfisher", swift_version: "5.0")
+    test(scheme: "Kingfisher-macOS", swift_version: "5.0")
+    test(scheme: "Kingfisher-tvOS", swift_version: "5.0")
+
     test(scheme: "Kingfisher", swift_version: "4.2")
     test(scheme: "Kingfisher-macOS", swift_version: "4.2")
     test(scheme: "Kingfisher-tvOS", swift_version: "4.2")
@@ -16,9 +20,7 @@ platform :ios do
   end
 
   lane :test do |options|
-    # Sometimes Travis CI would fail due to timeout. 
-    # Not sure why but just rerunning the test perfectly fixes it. :[
-    _test(options) rescue _test(options)
+    _test(options)
   end
 
   private_lane :_test do |options|
@@ -49,6 +51,7 @@ platform :ios do
       
       tests
       lint
+      carthage(command: "archive", frameworks: ["Kingfisher"])
       
       sync_build_number_to_git
       increment_version_number(version_number: target_version)
@@ -70,7 +73,8 @@ platform :ios do
       api_token: ENV['GITHUB_TOKEN'],
       name: release_log[:title],
       tag_name: target_version,
-      description: release_log[:text]
+      description: release_log[:text],
+      upload_assets: ["Kingfisher.framework.zip"]
       )
 
       pod_push
@@ -84,6 +88,7 @@ platform :ios do
       target_version = options[:version]
       Actions.sh("cd .. && jazzy \
                         --clean \
+                        -x USE_SWIFT_RESPONSE_FILE=NO \
                         --author \"Wei Wang\" \
                         --author_url https://onevcat.com \
                         --github_url https://github.com/onevcat/Kingfisher \
